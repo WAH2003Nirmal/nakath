@@ -1,0 +1,2133 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>නැකැත් සඳහා කාල ගණනය</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #ffb700;
+            --background-color: #f0f7ff;
+            --card-background: #ffffff;
+            --shadow-color: rgba(0,0,0,0.08);
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --completed-color: #80868b;
+            --hover-color: #f8fbff;
+            --accent-color: #4285f4;
+            --danger-color: #ea4335;
+            --success-color: #34a853;
+            --warning-color: #fbbc04;
+            --border-radius: 12px;
+            --transition-speed: 0.3s;
+            --header-height: 70px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Noto Sans Sinhala', Arial, sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            color: var(--text-primary);
+            transition: background-color var(--transition-speed) ease;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header styles */
+        .header {
+            position: sticky;
+            top: 0;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: var(--header-height);
+            margin-bottom: 20px;
+            border-radius: 0 0 var(--border-radius) var(--border-radius); /* Rounded bottom corners */
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            margin-right: 15px;
+            color: var(--primary-color);
+            /* Use a more relevant icon if available, like a star or moon */
+             /* Example: fas fa-star-and-crescent */
+             /* Example: fas fa-dharmachakra */
+             /* Using fas fa-moon for now */
+        }
+         .logo i {
+             /* Adjust icon styling if needed */
+         }
+
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 20px; /* Slightly smaller for better fit */
+            font-weight: 600; /* Bolder */
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .current-time {
+            font-size: 13px; /* Smaller */
+            background-color: rgba(26, 115, 232, 0.1);
+            padding: 6px 12px; /* Adjusted padding */
+            border-radius: 20px;
+            color: var(--primary-color);
+            font-weight: 500;
+            white-space: nowrap; /* Prevent wrapping */
+        }
+
+        .current-time i {
+            margin-right: 5px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px; /* Reduced gap */
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 38px; /* Slightly smaller */
+            height: 38px; /* Slightly smaller */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .icon-btn:hover {
+            background-color: rgba(0,0,0,0.05);
+            color: var(--primary-color);
+        }
+
+        /* Main content */
+        .content {
+            position: relative;
+        }
+
+        .view-selector {
+            display: flex;
+            margin-bottom: 25px; /* Increased margin */
+            background-color: var(--card-background);
+            border-radius: 25px;
+            padding: 5px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            overflow: hidden;
+            width: fit-content;
+            margin-left: auto; /* Align to right if needed */
+            margin-right: auto; /* Center */
+        }
+
+        .view-option {
+            padding: 8px 20px;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .view-option.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Timeline view */
+        .timeline-view {
+            display: flex; /* Default, managed by JS */
+            flex-direction: column;
+            position: relative;
+            padding-left: 35px; /* Increased padding */
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 15px; /* Adjusted position based on padding */
+            top: 25px;
+            bottom: 25px;
+            width: 4px; /* Thicker line */
+            background: linear-gradient(to bottom,
+                var(--completed-color) 0%,
+                var(--completed-color) 20%,
+                var(--primary-color) 40%,
+                var(--secondary-color) 70%,
+                rgba(0,0,0,0.1) 100%);
+            border-radius: 4px;
+            z-index: 0;
+        }
+
+        /* Schedule items */
+        .schedule-item {
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 20px 25px; /* Adjusted padding */
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center; /* Align items vertically */
+            position: relative;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            transition: all var(--transition-speed) ease;
+            overflow: hidden;
+            border-left: 5px solid transparent; /* Add left border for status indication */
+        }
+
+        .schedule-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+        }
+
+        .timeline-item { /* Wrapper for item and point */
+            position: relative;
+             animation: fadeIn 0.6s ease forwards; /* Add fade-in animation */
+             opacity: 0; /* Start hidden for animation */
+        }
+        .timeline-item:nth-child(1) { animation-delay: 0.1s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.2s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.3s; }
+        .timeline-item:nth-child(4) { animation-delay: 0.4s; }
+        .timeline-item:nth-child(5) { animation-delay: 0.5s; }
+        .timeline-item:nth-child(6) { animation-delay: 0.6s; }
+        .timeline-item:nth-child(7) { animation-delay: 0.7s; }
+        /* Add more delays if needed */
+
+
+        .timeline-point {
+            position: absolute;
+            left: -27.5px; /* Adjusted position relative to padding-left */
+            top: 30px; /* Align with center of emoji */
+            width: 15px; /* Larger point */
+            height: 15px; /* Larger point */
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            border: 3px solid var(--background-color); /* Make it stand out */
+            z-index: 1;
+        }
+
+        .completed .timeline-point {
+            background-color: var(--completed-color);
+        }
+        .completed .schedule-item {
+            border-left-color: var(--completed-color);
+            opacity: 0.8;
+        }
+
+        .active .timeline-point {
+            background-color: var(--secondary-color);
+            box-shadow: 0 0 0 6px rgba(255,183,0,0.3); /* Larger pulse */
+            animation: pulse 1.8s infinite ease-in-out;
+        }
+         .active .schedule-item {
+             border-left-color: var(--secondary-color);
+         }
+
+        .upcoming .schedule-item {
+             border-left-color: var(--primary-color);
+        }
+         .upcoming .timeline-point {
+             background-color: var(--primary-color);
+         }
+
+        .emoji-container {
+            width: 60px; /* Slightly smaller */
+            height: 60px; /* Slightly smaller */
+            border-radius: 18px; /* Rounded square */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 20px;
+            font-size: 28px; /* Adjusted size */
+            flex-shrink: 0;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .schedule-item:hover .emoji-container {
+            transform: scale(1.1) rotate(-3deg);
+        }
+
+        .schedule-details {
+            flex: 1;
+            z-index: 2;
+        }
+
+        .event-title {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 8px; /* Reduced margin */
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap; /* Allow wrapping */
+        }
+
+        .status-badge {
+            font-size: 11px; /* Smaller */
+            padding: 3px 10px; /* Adjusted padding */
+            border-radius: 12px;
+            font-weight: 500; /* Slightly bolder */
+            text-transform: uppercase; /* Uppercase text */
+            letter-spacing: 0.5px; /* Add spacing */
+            white-space: nowrap; /* Prevent wrapping */
+        }
+
+        .status-badge.completed { background-color: var(--completed-color); color: white; }
+        .status-badge.active { background-color: var(--success-color); color: white; }
+        .status-badge.upcoming { background-color: var(--primary-color); color: white; }
+        .status-badge.error { background-color: var(--danger-color); color: white; } /* For errors */
+
+
+        .event-time {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .event-time i {
+             opacity: 0.7;
+        }
+
+        .details-section {
+            margin-top: 15px;
+        }
+
+        .section-title {
+            font-size: 13px; /* Smaller */
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .tag {
+            background-color: rgba(0,0,0,0.04);
+            padding: 5px 12px; /* Adjusted padding */
+            border-radius: 15px; /* More rounded */
+            font-size: 13px; /* Smaller */
+            display: inline-flex; /* Use inline-flex */
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary); /* Dimmer color */
+            border: 1px solid rgba(0,0,0,0.06); /* Subtle border */
+        }
+
+        .tag i {
+            font-size: 12px;
+            opacity: 0.8;
+            color: var(--primary-color); /* Color the icon */
+        }
+
+        .countdown-container {
+            margin-top: 15px;
+            background: linear-gradient(120deg, rgba(26,115,232,0.05), rgba(66,133,244,0.08));
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(26,115,232,0.1);
+        }
+         .completed .countdown-container,
+         .active .countdown-container {
+            /* display: none; */ /* Keep visible but maybe grayed out */
+             /* opacity: 0.6; */
+         }
+
+
+        .countdown {
+            display: flex;
+            justify-content: space-around; /* Space evenly */
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .countdown-section {
+            text-align: center;
+            min-width: 50px; /* Adjusted width */
+        }
+
+        .countdown-value {
+            font-size: 22px; /* Larger value */
+            font-weight: 600;
+            line-height: 1.1;
+        }
+
+        .countdown-label {
+            font-size: 11px; /* Smaller label */
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+
+        .progress-container {
+            height: 8px; /* Thicker bar */
+            background-color: rgba(0,0,0,0.05);
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+            width: 100%;
+        }
+         .completed .progress-container,
+         .upcoming .progress-container {
+             /* display: none; */ /* Hide progress for completed/upcoming */
+         }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-color), var(--success-color)); /* Adjusted gradient */
+            border-radius: 4px;
+            width: 0%;
+            transition: width 1s ease-out; /* Smoother transition */
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            border-top: 1px solid rgba(0,0,0,0.05); /* Separator line */
+            padding-top: 15px;
+        }
+         .completed .actions {
+             display: none; /* Hide actions for completed items */
+         }
+
+
+        .action-btn {
+            background-color: rgba(0,0,0,0.05);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px; /* Adjusted gap */
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            font-size: 13px; /* Smaller */
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            background-color: rgba(0,0,0,0.08);
+            color: var(--text-primary);
+        }
+
+        .action-btn i {
+            font-size: 14px;
+        }
+
+        .action-btn.primary {
+            background-color: rgba(26,115,232,0.1);
+            color: var(--primary-color);
+        }
+
+        .action-btn.primary:hover {
+            background-color: rgba(26,115,232,0.15);
+        }
+
+        /* Completed items styling */
+        .completed .event-title {
+            color: var(--completed-color);
+            /* text-decoration: line-through; */ /* Optional: Strikethrough title */
+            /* text-decoration-color: rgba(128, 134, 139, 0.5); */
+        }
+
+        .completed .event-time {
+            color: var(--completed-color);
+        }
+        .completed .tag {
+            opacity: 0.7;
+        }
+
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255,183,0,0.5);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(255,183,0,0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255,183,0,0);
+            }
+        }
+
+        /* Custom floating panel */
+        .floating-panel {
+            position: fixed;
+            bottom: 90px; /* Position above main FAB */
+            right: 30px;
+            background-color: var(--card-background);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            padding: 10px; /* Reduced padding */
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Reduced gap */
+            z-index: 999; /* Below main FAB */
+            transform: translateY(20px) scale(0.9); /* Start smaller and lower */
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            visibility: hidden; /* Hide initially */
+        }
+
+        .floating-panel.show {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            visibility: visible;
+        }
+
+         .floating-action-area {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+         }
+
+
+        .floating-btn {
+            width: 55px; /* Slightly larger */
+            height: 55px; /* Slightly larger */
+            border-radius: 18px; /* Rounded square */
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(26, 115, 232, 0.4); /* Stronger shadow */
+            transition: all 0.3s ease;
+            position: relative; /* Needed for z-index */
+            z-index: 1000;
+        }
+
+        .floating-btn:hover {
+            background-color: #0e62d0;
+            transform: scale(1.05) rotate(15deg);
+        }
+         .floating-btn.active { /* Style when panel is open */
+            transform: rotate(45deg);
+            background-color: var(--danger-color);
+            box-shadow: 0 5px 20px rgba(234, 67, 53, 0.4);
+         }
+
+
+        .mini-btn {
+            width: 45px; /* Slightly larger */
+            height: 45px; /* Slightly larger */
+            border-radius: 15px; /* Rounded square */
+            background-color: rgba(0,0,0,0.05);
+            color: var(--text-secondary);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mini-btn:hover {
+            background-color: rgba(0,0,0,0.1);
+            color: var(--text-primary);
+            transform: scale(1.1);
+        }
+
+        /* Calendar popup */
+        .calendar-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.6); /* Darker overlay */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0s 0.3s linear;
+            padding: 15px; /* Add padding for smaller screens */
+        }
+
+        .calendar-popup.show {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease, visibility 0s 0s linear;
+        }
+
+        .calendar-container {
+            background-color: var(--card-background);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            width: 100%; /* Full width on small screens */
+            max-width: 450px; /* Max width */
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        .calendar-popup.show .calendar-container {
+            transform: scale(1);
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .popup-title {
+            font-size: 18px; /* Slightly smaller */
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 26px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            line-height: 1;
+            padding: 5px; /* Easier to click */
+             transition: color 0.2s;
+        }
+         .close-btn:hover {
+             color: var(--danger-color);
+         }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px; /* Reduced gap */
+            margin-bottom: 20px;
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+            padding: 0 5px; /* Align with days */
+        }
+
+        .calendar-header div {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 12px; /* Smaller */
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column; /* Allow stacking content */
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent; /* Border for selection */
+        }
+        .calendar-day.other-month {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .calendar-day:not(.other-month):hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .calendar-day.today {
+            border-color: var(--secondary-color);
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+        .calendar-day.selected {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 700;
+            border-color: var(--primary-color);
+        }
+         .calendar-day.selected.today {
+            border-color: var(--secondary-color); /* Keep today border if selected */
+         }
+
+        .calendar-day.has-event::after {
+            content: '';
+            position: absolute;
+            bottom: 5px; /* Adjusted position */
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            box-shadow: 0 0 5px var(--secondary-color); /* Glow */
+        }
+         .calendar-day.selected.has-event::after {
+            background-color: white; /* Make dot visible on selected */
+            box-shadow: none;
+         }
+
+
+        .month-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px; /* Increased margin */
+        }
+
+        .month-title {
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            flex-grow: 1; /* Allow title to take space */
+        }
+
+        .month-nav {
+            display: flex;
+            gap: 5px; /* Reduced gap */
+        }
+
+        .month-btn {
+            width: 35px; /* Slightly larger */
+            height: 35px; /* Slightly larger */
+            border-radius: 50%;
+            background: none;
+            border: 1px solid rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .month-btn:hover {
+            background-color: rgba(0,0,0,0.05);
+            border-color: rgba(0,0,0,0.15);
+            color: var(--primary-color);
+        }
+        .month-btn i {
+             font-size: 14px;
+        }
+
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: rgba(32, 33, 36, 0.95); /* More opaque */
+            color: white;
+            padding: 14px 22px; /* Larger padding */
+            border-radius: 10px; /* More rounded */
+            box-shadow: 0 6px 25px rgba(0,0,0,0.25);
+            z-index: 3000; /* Above everything */
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); /* Smoother animation */
+            font-size: 14px;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            width: 22px; /* Adjusted size */
+            height: 22px; /* Adjusted size */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px; /* Adjusted size */
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        .toast-icon.success { background-color: var(--success-color); }
+        .toast-icon.error { background-color: var(--danger-color); }
+        .toast-icon.info { background-color: var(--primary-color); }
+        .toast-icon.warning { background-color: var(--warning-color); }
+
+
+        /* Card backgrounds (Subtle pattern) */
+        .card-bg {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0; /* Cover whole card */
+            background-image: radial-gradient(circle at 90% 10%, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 40%);
+            z-index: 1;
+            pointer-events: none;
+            border-radius: inherit; /* Inherit border radius */
+            opacity: 0.5;
+        }
+
+         /* List View */
+        .list-view {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            gap: 15px; /* Space between list items */
+        }
+
+        .list-item {
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 15px 20px;
+            box-shadow: 0 3px 10px var(--shadow-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all var(--transition-speed) ease;
+             border-left: 5px solid transparent; /* For status indication */
+             position: relative; /* For card-bg */
+             overflow: hidden;
+        }
+
+        .list-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .list-item .emoji-container {
+            width: 50px; /* Smaller emoji in list */
+            height: 50px;
+            font-size: 24px;
+            margin-right: 0; /* Reset margin */
+            flex-shrink: 0;
+             box-shadow: none; /* Remove shadow in list view */
+             border-radius: 12px;
+             transition: transform 0.3s ease; /* Add transition for hover */
+        }
+         .list-item:hover .emoji-container {
+             transform: scale(1.05); /* Simpler hover effect */
+         }
+
+
+        .list-item .schedule-details {
+            flex-grow: 1; /* Take remaining space */
+            min-width: 0; /* Prevent details from overflowing */
+        }
+
+        .list-item .event-title {
+            font-size: 16px;
+            margin-bottom: 5px;
+            align-items: flex-start; /* Align badge better if title wraps */
+        }
+
+        .list-item .event-time {
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .list-item .status-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            margin-left: auto; /* Push status badge to the right */
+            align-self: center; /* Vertically center badge */
+        }
+         .list-item .event-title > span:first-child { /* Target only the title text span */
+            margin-right: 8px; /* Space between title and badge */
+            /* No longer need margin-right: auto; */
+         }
+
+
+        .list-item .tag-container {
+            margin-top: 5px;
+            gap: 5px;
+             overflow: hidden; /* Hide overflowing tags */
+             white-space: nowrap; /* Prevent tags wrapping */
+             max-width: 100%; /* Ensure it doesn't overflow */
+        }
+        .list-item .tag {
+            font-size: 11px;
+            padding: 3px 8px;
+             display: inline-flex; /* Keep tags inline */
+        }
+         .list-item .tag i {
+            font-size: 10px;
+         }
+
+        .list-item .countdown-container,
+        .list-item .progress-container,
+        .list-item .actions {
+            display: none; /* Hide complex elements in list view by default */
+            /* Alternatively, could show simplified versions */
+        }
+
+        /* Status colors for list items */
+         .list-item.completed { border-left-color: var(--completed-color); opacity: 0.8; }
+         .list-item.active { border-left-color: var(--secondary-color); }
+         .list-item.upcoming { border-left-color: var(--primary-color); }
+
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                height: auto;
+                padding: 10px 15px; /* Adjusted padding */
+                gap: 10px;
+                align-items: stretch; /* Stretch items */
+                border-radius: 0; /* No radius on mobile */
+            }
+             .header-left {
+                 justify-content: space-between; /* Space out logo and title */
+                 width: 100%;
+             }
+              h1 { font-size: 18px; }
+
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+                gap: 10px;
+            }
+             .current-time {
+                 font-size: 12px;
+                 padding: 5px 10px;
+             }
+             .toolbar { gap: 5px;}
+             .icon-btn { width: 35px; height: 35px; font-size: 16px;}
+
+
+            .container { padding: 15px; }
+
+            .schedule-item { /* Applies mainly to timeline view on mobile */
+                flex-direction: column;
+                padding: 15px;
+                align-items: flex-start; /* Align left */
+            }
+
+            .schedule-item .emoji-container { /* Timeline view on mobile */
+                margin-bottom: 15px;
+                margin-right: 0;
+                 align-self: flex-start; /* Keep left */
+            }
+
+             .list-item .event-title { /* List view title on mobile */
+                font-size: 15px;
+             }
+             .list-item .event-time {
+                 font-size: 12px;
+             }
+
+
+            .countdown {
+                flex-wrap: wrap;
+                gap: 15px; /* Add gap between rows */
+                justify-content: flex-start; /* Align left */
+            }
+
+            .countdown-section {
+                flex-basis: calc(50% - 10px); /* Two columns */
+                min-width: auto;
+                text-align: left;
+            }
+             .countdown-value { font-size: 20px; }
+             .countdown-label { font-size: 10px; }
+
+            .view-selector {
+                width: 100%;
+                justify-content: space-around; /* Space out options */
+            }
+             .view-option { padding: 8px 15px; font-size: 13px;}
+
+            .timeline-view {
+                padding-left: 30px; /* Adjust padding */
+            }
+             .timeline-point {
+                left: -25px; /* Adjust position */
+             }
+
+            .floating-action-area { bottom: 15px; right: 15px; }
+            .floating-panel { bottom: 80px; right: 15px; }
+
+             .calendar-container { max-width: 100%; border-radius: 15px; padding: 20px; }
+             .calendar-day { font-size: 13px;}
+             .calendar-header div { font-size: 11px; }
+        }
+
+        /* Dark theme */
+        body.dark-theme {
+            --background-color: #121212; /* Darker background */
+            --card-background: #1e1e1e; /* Slightly lighter card */
+            --primary-color: #64b5f6; /* Lighter blue */
+            --secondary-color: #ffd54f; /* Lighter yellow */
+            --text-primary: #e0e0e0; /* Light gray text */
+            --text-secondary: #9e9e9e; /* Medium gray text */
+            --completed-color: #757575; /* Darker gray */
+            --shadow-color: rgba(0,0,0,0.3); /* Darker shadow */
+            --hover-color: #2a2a2a; /* Darker hover */
+        }
+
+        .dark-theme .header {
+            background-color: rgba(30, 30, 30, 0.9); /* Dark header bg */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+        }
+        .dark-theme .header,
+        .dark-theme .icon-btn,
+        .dark-theme .current-time,
+        .dark-theme .view-selector,
+        .dark-theme .schedule-item,
+        .dark-theme .list-item,
+        .dark-theme .tag,
+        .dark-theme .action-btn,
+        .dark-theme .floating-panel,
+        .dark-theme .mini-btn,
+        .dark-theme .calendar-popup,
+        .dark-theme .calendar-container,
+        .dark-theme .month-btn,
+        .dark-theme .toast {
+            border-color: rgba(255, 255, 255, 0.1) !important; /* Adjust borders */
+        }
+
+        .dark-theme .view-selector { background-color: #2c2c2c; }
+        .dark-theme .view-option.active { background-color: var(--primary-color); color: #121212; }
+        .dark-theme .view-option { color: var(--text-secondary); }
+
+        .dark-theme .timeline-line {
+             background: linear-gradient(to bottom,
+                var(--completed-color) 0%,
+                var(--completed-color) 20%,
+                var(--primary-color) 40%,
+                var(--secondary-color) 70%,
+                rgba(255,255,255,0.1) 100%);
+        }
+         .dark-theme .timeline-point {
+             border-color: var(--background-color);
+         }
+         .dark-theme .active .timeline-point {
+            box-shadow: 0 0 0 6px rgba(255, 213, 79, 0.3);
+         }
+
+
+        .dark-theme .tag { background-color: rgba(255,255,255,0.05); color: var(--text-secondary); }
+        .dark-theme .tag i { color: var(--primary-color); }
+
+        .dark-theme .countdown-container {
+            background: linear-gradient(120deg, rgba(100, 181, 246, 0.08), rgba(100, 181, 246, 0.12));
+        }
+        .dark-theme .progress-container { background-color: rgba(255,255,255,0.1); }
+        .dark-theme .progress-bar { background: linear-gradient(90deg, var(--secondary-color), var(--success-color)); } /* Keep progress colors vibrant */
+
+
+        .dark-theme .action-btn { background-color: rgba(255,255,255,0.08); color: var(--text-secondary); }
+        .dark-theme .action-btn:hover { background-color: rgba(255,255,255,0.12); color: var(--text-primary); }
+        .dark-theme .action-btn.primary { background-color: rgba(100, 181, 246, 0.15); color: var(--primary-color); }
+        .dark-theme .action-btn.primary:hover { background-color: rgba(100, 181, 246, 0.2); }
+
+        .dark-theme .icon-btn:hover { background-color: rgba(255,255,255,0.1); color: var(--primary-color); }
+        .dark-theme .current-time { background-color: rgba(100, 181, 246, 0.1); color: var(--primary-color); }
+
+        .dark-theme .floating-panel,
+        .dark-theme .calendar-container {
+            background-color: #2a2a2a; /* Slightly different dark bg */
+        }
+        .dark-theme .mini-btn { background-color: rgba(255,255,255,0.1); color: var(--text-secondary);}
+        .dark-theme .mini-btn:hover { background-color: rgba(255,255,255,0.15); color: var(--text-primary); }
+
+
+        .dark-theme .calendar-day:not(.other-month):hover { background-color: rgba(255,255,255,0.08); }
+        .dark-theme .calendar-day.today { border-color: var(--secondary-color); color: var(--secondary-color); }
+        .dark-theme .calendar-day.selected { background-color: var(--primary-color); color: #1e1e1e; border-color: var(--primary-color); }
+        .dark-theme .calendar-day.selected.has-event::after { background-color: #1e1e1e; }
+        .dark-theme .calendar-day.has-event::after { box-shadow: 0 0 5px var(--secondary-color); } /* Keep glow */
+         .dark-theme .month-btn { color: var(--text-secondary); border-color: rgba(255,255,255,0.15); }
+         .dark-theme .month-btn:hover { background-color: rgba(255,255,255,0.1); color: var(--primary-color); }
+
+         .dark-theme .toast { background-color: rgba(50, 50, 50, 0.95); color: #e0e0e0; }
+         .dark-theme .close-btn:hover { color: var(--danger-color);}
+
+         .dark-theme .card-bg {
+            background-image: radial-gradient(circle at 90% 10%, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 40%);
+            opacity: 0.8;
+        }
+        /* Style adjustments for dark theme list items */
+         .dark-theme .list-item {
+             border-color: rgba(255, 255, 255, 0.1) !important; /* Override default border */
+         }
+         .dark-theme .list-item.completed { border-left-color: var(--completed-color) !important; }
+         .dark-theme .list-item.active { border-left-color: var(--secondary-color) !important; }
+         .dark-theme .list-item.upcoming { border-left-color: var(--primary-color) !important; }
+
+             /* Footer Styles */
+    .footer {
+        text-align: center;
+        padding: 20px;
+        margin-top: 40px; /* Space above footer */
+        font-size: 14px;
+        color: var(--text-secondary);
+        border-top: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .footer a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+    .footer a:hover {
+        color: #0e62d0; /* Darker shade on hover */
+        text-decoration: underline;
+    }
+
+    .dark-theme .footer {
+        border-top-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-secondary);
+    }
+
+    .dark-theme .footer a {
+        color: var(--primary-color);
+    }
+
+     .dark-theme .footer a:hover {
+        color: #8ecfff; 
+    }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="logo"><i class="fas fa-star-and-crescent"></i></div> 
+            <h1>නැකැත් කාල ගණනය</h1>
+        </div>
+        <div class="header-right">
+            <div class="current-time" id="current-time"><i class="fas fa-clock"></i> <span>සකසමින්...</span></div>
+            <div class="toolbar">
+                <button class="icon-btn" id="calendar-btn" title="දින දර්ශනය පෙන්වන්න"><i class="fas fa-calendar-alt"></i></button>
+                <button class="icon-btn" id="notification-btn" title="දැනුම්දීම්"><i class="fas fa-bell"></i></button>
+                <button class="icon-btn" id="theme-toggle" title="මාදිලිය වෙනස් කරන්න"><i class="fas fa-moon"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="content">
+            <div class="view-selector">
+                <div class="view-option active" data-view="timeline">කාල රේඛාව</div>
+                <div class="view-option" data-view="list">ලැයිස්තුව</div>
+            </div>
+
+            <!-- Timeline View -->
+            <div class="timeline-view" id="schedule-list">
+                <div class="timeline-line"></div>
+                <div id="loading-indicator" style="text-align: center; padding: 30px; color: var(--text-secondary);">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>නැකැත් පූරණය වෙමින් පවතී...</p>
+                </div>
+                
+            </div>
+
+            <!-- List View -->
+             <div class="list-view" id="schedule-list-list">
+                 <div id="loading-indicator-list" style="text-align: center; padding: 30px; color: var(--text-secondary); display: none;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>ලැයිස්තුව පූරණය වෙමින් පවතී...</p>
+                </div>
+                 
+             </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button Area -->
+    <div class="floating-action-area">
+        <div class="floating-panel" id="floating-panel">
+            <button class="mini-btn" title="අලුත් කරන්න" id="refresh-action"><i class="fas fa-sync-alt"></i></button>
+            <button class="mini-btn" title="මුද්‍රණය" id="print-action"><i class="fas fa-print"></i></button>
+            <button class="mini-btn" title="සැකසුම්" id="settings-action"><i class="fas fa-cog"></i></button>
+        </div>
+        <button class="floating-btn" id="floating-btn" title="ක්‍රියා"><i class="fas fa-plus"></i></button>
+    </div>
+
+    <!-- Calendar Popup -->
+    <div class="calendar-popup" id="calendar-popup">
+        <div class="calendar-container">
+            <div class="popup-header">
+                <div class="popup-title">නැකැත් දින දර්ශනය</div>
+                <button class="close-btn" id="close-calendar" title="වසන්න">×</button>
+            </div>
+
+            <div class="month-selector">
+                 <button class="month-btn" id="prev-month" title="පෙර මාසය"><i class="fas fa-chevron-left"></i></button>
+                 <div class="month-title" id="month-title">අප්‍රේල් 2025</div>
+                 <button class="month-btn" id="next-month" title="ලබන මාසය"><i class="fas fa-chevron-right"></i></button>
+            </div>
+
+            <div class="calendar-header">
+                <div>ඉරි</div> 
+                <div>සඳු</div>
+                <div>අඟ</div>
+                <div>බදා</div>
+                <div>බ්‍රහ</div>
+                <div>සිකු</div>
+                <div>සෙන</div>
+            </div>
+
+            <div class="calendar" id="calendar-grid">
+                
+            </div>
+
+            <button class="action-btn primary" style="width: 100%; justify-content: center;" id="show-today">
+                <i class="fas fa-calendar-day"></i> අද දිනට යන්න
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-icon" id="toast-icon"><i class="fas fa-check"></i></div>
+        <div class="toast-message" id="toast-message"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const scheduleData = [
+                
+                 {
+                    id: 1,
+                    emoji: "🧘", // Changed emoji
+                    emojiBackground: "#e6e0f7",
+                    title: "පුණ්‍ය කාලය ඇරඹීම",
+                    dateString: "2025 අප්‍රේල් 13 ඉරිදා රාත්‍රී 08.57", // More descriptive date
+                    timestamp: new Date("2025-04-13T20:57:00").getTime(),
+                    tags: [{ icon: "fas fa-info-circle", text: "නැකතට පෙර සූදානම් වන්න" }],
+                 },
+                 {
+                    id: 2,
+                    emoji: "☀️", // Changed emoji
+                    emojiBackground: "#fff9e0",
+                    title: "අලුත් අවුරුදු උදාව",
+                    dateString: "2025 අප්‍රේල් 14 සඳුදා පාන්දර 03.21",
+                    timestamp: new Date("2025-04-14T03:21:00").getTime(),
+                    tags: [{ icon: "fas fa-sun", text: "සිංහල අලුත් අවුරුද්ද" }],
+                 },
+                 {
+                    id: 3,
+                    emoji: "🍳", // Changed emoji
+                    emojiBackground: "#ffede0",
+                    title: "ආහාර පිසීම",
+                    dateString: "2025 අප්‍රේල් 14 සඳුදා පාන්දර 04.04",
+                    timestamp: new Date("2025-04-14T04:04:00").getTime(),
+                    tags: [
+                        { icon: "fas fa-tshirt", text: "ඇඳුම: තඹ වර්ණය" },
+                        { icon: "far fa-compass", text: "දිශාව: දකුණ" }
+                    ],
+                 },
+                 {
+                    id: 4,
+                    emoji: "👨‍👩‍👧‍👦", // Changed emoji for family/eating
+                    emojiBackground: "#e0f0ff",
+                    title: "වැඩ ඇල්ලීම, ගනුදෙනු කිරීම හා ආහාර අනුභවය", // Combined title
+                    dateString: "2025 අප්‍රේල් 14 සඳුදා උදෑසන 06.44",
+                    timestamp: new Date("2025-04-14T06:44:00").getTime(),
+                    tags: [
+                        { icon: "fas fa-tshirt", text: "ඇඳුම: මුතු පැහැ / සුදු" },
+                        { icon: "far fa-compass", text: "දිශාව: දකුණ" }
+                    ],
+                 },
+                 {
+                    id: 5,
+                    emoji: "🕊️", // Changed emoji
+                    emojiBackground: "#e8f5e9",
+                    title: "පුණ්‍ය කාලය අවසානය",
+                    dateString: "2025 අප්‍රේල් 14 සඳුදා උදෑසන 09.45",
+                    timestamp: new Date("2025-04-14T09:45:00").getTime(),
+                    tags: [{ icon: "fas fa-info-circle", text: "ආගමික වතාවත් සඳහා" }],
+                 },
+                  {
+                    id: 6,
+                    emoji: "🌿",
+                    emojiBackground: "#dcedc8",
+                    title: "හිසතෙල් ගෑම",
+                    dateString: "2025 අප්‍රේල් 16 බදාදා උදෑසන 07.03",
+                    timestamp: new Date("2025-04-16T07:03:00").getTime(),
+                    tags: [
+                        { icon: "fas fa-tshirt", text: "ඇඳුම: කොළ වර්ණය" },
+                        { icon: "far fa-compass", text: "දිශාව: දකුණ" },
+                        { icon: "fas fa-tree", text: "නුග පත් යුෂ මිශ්‍ර නානු" }
+                    ],
+                 },
+                 {
+                    id: 7,
+                    emoji: "💼",
+                    emojiBackground: "#f3e5f5",
+                    title: "රැකී රක්ෂා සඳහා පිටත්ව යෑම",
+                    dateString: "2025 අප්‍රේල් 17 බ්‍රහස්පතින්දා උදෑසන 04.52",
+                    timestamp: new Date("2025-04-17T04:52:00").getTime(),
+                    tags: [
+                        { icon: "fas fa-tshirt", text: "ඇඳුම: රන්වන් පැහැය" },
+                        { icon: "far fa-compass", text: "දිශාව: උතුර" },
+                         { icon: "fas fa-utensils", text: "කිරිබත් හා කැවිලි අනුභවය" }
+                    ],
+                 }
+                // Add more schedule items here following the same structure
+            ].sort((a, b) => a.timestamp - b.timestamp); // Ensure data is sorted by time
+
+            // --- DOM Elements ---
+            const currentTimeElement = document.getElementById('current-time').querySelector('span');
+            const themeToggleButton = document.getElementById('theme-toggle');
+            const fabButton = document.getElementById('floating-btn');
+            const floatingPanel = document.getElementById('floating-panel');
+            const calendarButton = document.getElementById('calendar-btn');
+            const calendarPopup = document.getElementById('calendar-popup');
+            const closeCalendarButton = document.getElementById('close-calendar');
+            const calendarGrid = document.getElementById('calendar-grid');
+            const monthTitleElement = document.getElementById('month-title');
+            const prevMonthButton = document.getElementById('prev-month');
+            const nextMonthButton = document.getElementById('next-month');
+            const showTodayButton = document.getElementById('show-today');
+            const toastElement = document.getElementById('toast');
+            const toastIcon = document.getElementById('toast-icon');
+            const toastMessage = document.getElementById('toast-message');
+            const refreshButton = document.getElementById('refresh-action');
+            const viewSelectorOptions = document.querySelectorAll('.view-option');
+            const timelineViewContainer = document.getElementById('schedule-list');
+            const listViewContainer = document.getElementById('schedule-list-list');
+            const loadingIndicatorTimeline = document.getElementById('loading-indicator');
+            const loadingIndicatorList = document.getElementById('loading-indicator-list');
+            const printButton = document.getElementById('print-action'); // Added Print Button
+            const settingsButton = document.getElementById('settings-action'); // Added Settings Button
+            const notificationButton = document.getElementById('notification-btn'); // Added Notification Button
+
+            // --- State Variables ---
+            let currentView = 'timeline'; // 'timeline' or 'list'
+            let clockInterval;
+            let countdownInterval;
+            let currentCalendarDate = new Date(2025, 3, 1); // Start calendar in April 2025
+            let selectedCalendarDate = null;
+            let toastTimeout;
+
+            // --- Core Functions ---
+
+            function formatSinhalaTime(date) {
+                const dayNames = ['ඉරිදා', 'සඳුදා', 'අඟහරුවාදා', 'බදාදා', 'බ්‍රහස්පතින්දා', 'සිකුරාදා', 'සෙනසුරාදා'];
+                const monthNames = ['ජනවාරි', 'පෙබරවාරි', 'මාර්තු', 'අප්‍රේල්', 'මැයි', 'ජූනි', 'ජූලි', 'අගෝස්තු', 'සැප්තැම්බර්', 'ඔක්තෝම්බර්', 'නොවැම්බර්', 'දෙසැම්බර්'];
+
+                 const day = dayNames[date.getDay()];
+                 const month = monthNames[date.getMonth()];
+                 const dayNum = date.getDate();
+                 const year = date.getFullYear();
+                 const timeString = date.toLocaleTimeString('si-LK', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+
+                 // Format: 2025 අප්‍රේල් 14 සඳුදා පෙ.ව. 03:21:00
+                 return `${year} ${month} ${dayNum} ${day} ${timeString}`;
+            }
+
+            function updateClock() {
+                const now = new Date();
+                currentTimeElement.textContent = formatSinhalaTime(now);
+            }
+
+            function formatCountdown(ms) {
+                if (ms <= 0) return null;
+
+                const totalSeconds = Math.floor(ms / 1000);
+                const days = Math.floor(totalSeconds / (3600 * 24));
+                const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                // Only show relevant parts
+                let parts = [];
+                if (days > 0) parts.push(`${days} දින`);
+                if (hours > 0 || days > 0) parts.push(`${hours} පැය`); // Show hours if days>0 or hours>0
+                if (minutes > 0 || hours > 0 || days > 0) parts.push(`${minutes} මිනි`); // Show mins if higher units exist
+                 parts.push(`${seconds} තත්`); // Always show seconds
+
+                return {
+                    days: String(days).padStart(2, '0'),
+                    hours: String(hours).padStart(2, '0'),
+                    minutes: String(minutes).padStart(2, '0'),
+                    seconds: String(seconds).padStart(2, '0'),
+                    // simpleString: parts.join(', ') + ' ඉතිරියි' // Example for simple display
+                };
+            }
+
+
+            function updateCountdownsAndStatus() {
+                const now = new Date().getTime();
+                let activeEventIndex = -1;
+                let nextUpcomingIndex = -1;
+
+                
+                for (let i = 0; i < scheduleData.length; i++) {
+                    if (scheduleData[i].timestamp > now) {
+                        if (nextUpcomingIndex === -1) {
+                            nextUpcomingIndex = i; // This is the next event
+                        }
+                        
+                        if (i > 0 && now >= scheduleData[i - 1].timestamp) {
+                            activeEventIndex = i - 1;
+                        }
+                         
+                         if (i === 0 && now < scheduleData[i].timestamp) {
+                             activeEventIndex = -1;
+                         }
+                         break; 
+                    }
+                    
+                    if (scheduleData[i].timestamp === now) {
+                        activeEventIndex = i;
+                         if (i + 1 < scheduleData.length) {
+                             nextUpcomingIndex = i + 1;
+                         }
+                         break;
+                    }
+                }
+                
+                 if (nextUpcomingIndex === -1 && scheduleData.length > 0 && now >= scheduleData[scheduleData.length - 1].timestamp) {
+                     activeEventIndex = scheduleData.length - 1;
+                 }
+
+
+                // --- Update Both Views ---
+                const containers = [timelineViewContainer, listViewContainer];
+                const itemSelectors = ['.timeline-item', '.list-item']; // Selector for items in each view
+
+                containers.forEach((container, viewIndex) => {
+                    if (!container) return; // Skip if container doesn't exist
+
+                    container.querySelectorAll(itemSelectors[viewIndex]).forEach((itemElement, index) => {
+                         if (!scheduleData[index]) return; // Ensure data exists for the index
+
+                        const itemData = scheduleData[index];
+                        const timeDiff = itemData.timestamp - now;
+                        const statusElement = itemElement.querySelector('.status-badge');
+                        const countdownContainer = itemElement.querySelector('.countdown-container'); // Might be null
+                        const progressContainer = itemElement.querySelector('.progress-container'); // Might be null
+                        const progressBar = itemElement.querySelector('.progress-bar'); // Might be null
+
+                        // Remove existing status classes
+                        itemElement.classList.remove('completed', 'active', 'upcoming');
+                         if (statusElement) {
+                            statusElement.classList.remove('completed', 'active', 'upcoming', 'error');
+                         }
+
+                        let status = 'upcoming';
+                        let statusText = 'ඉදිරියේදී';
+
+                         // Determine Status more precisely
+                        if (index === activeEventIndex) {
+                             status = 'active';
+                             statusText = 'ක්‍රියාත්මකයි';
+                        } else if (now > itemData.timestamp) {
+                             status = 'completed';
+                             statusText = 'අවසන්';
+                        } else { // now <= itemData.timestamp
+                             status = 'upcoming';
+                             statusText = 'ඉදිරියේදී';
+                        }
+
+                        // Apply new status classes
+                        itemElement.classList.add(status);
+                        if (statusElement) {
+                             statusElement.classList.add(status);
+                             statusElement.textContent = statusText;
+                        }
+
+
+                        // Update Countdown (Only in Timeline View by default CSS)
+                        if (countdownContainer && viewIndex === 0) { // Check viewIndex === 0 for timeline
+                            if (status === 'upcoming' && timeDiff > 0) {
+                                const countdownValues = formatCountdown(timeDiff);
+                                if (countdownValues) {
+                                    countdownContainer.style.display = '';
+                                    countdownContainer.querySelector('.days .countdown-value').textContent = countdownValues.days;
+                                    countdownContainer.querySelector('.hours .countdown-value').textContent = countdownValues.hours;
+                                    countdownContainer.querySelector('.minutes .countdown-value').textContent = countdownValues.minutes;
+                                    countdownContainer.querySelector('.seconds .countdown-value').textContent = countdownValues.seconds;
+                                } else {
+                                    countdownContainer.style.display = 'none';
+                                }
+                            } else {
+                                countdownContainer.style.display = 'none';
+                            }
+                        }
+
+                         // Update Progress Bar (Only in Timeline View by default CSS)
+                        if (progressContainer && progressBar && viewIndex === 0) { // Check viewIndex === 0 for timeline
+                            if (status === 'active') {
+                                progressContainer.style.display = '';
+                                // Use nextUpcomingIndex to calculate duration accurately
+                                const nextEventTimestamp = (nextUpcomingIndex !== -1) ? scheduleData[nextUpcomingIndex].timestamp : now + 3600000; // Default 1 hour if last event
+                                const eventDuration = nextEventTimestamp - itemData.timestamp;
+                                const elapsed = now - itemData.timestamp;
+                                let progress = 0;
+                                if (eventDuration > 0 && elapsed >= 0) {
+                                    progress = Math.min(100, Math.max(0, (elapsed / eventDuration) * 100));
+                                } else if (elapsed >= 0) {
+                                    progress = 100; // If duration is 0 or negative but elapsed is positive, show 100%
+                                }
+                                progressBar.style.width = `${progress}%`;
+                            } else {
+                                progressContainer.style.display = 'none';
+                                progressBar.style.width = '0%';
+                            }
+                        }
+                    });
+                }); // End containers.forEach
+            }
+
+
+            function renderScheduleItem(item, index) {
+                 const itemWrapper = document.createElement('div');
+                 itemWrapper.classList.add('timeline-item');
+                 itemWrapper.style.animationDelay = `${index * 0.08}s`;
+
+                 const scheduleItem = document.createElement('div');
+                 scheduleItem.classList.add('schedule-item');
+                 scheduleItem.dataset.id = item.id;
+
+                 const cardBg = document.createElement('div');
+                 cardBg.classList.add('card-bg');
+                 scheduleItem.appendChild(cardBg);
+
+                 const timelinePoint = document.createElement('div');
+                 timelinePoint.classList.add('timeline-point');
+                 itemWrapper.appendChild(timelinePoint);
+
+                 const emojiContainer = document.createElement('div');
+                 emojiContainer.classList.add('emoji-container');
+                 emojiContainer.style.backgroundColor = item.emojiBackground || 'var(--hover-color)';
+                 emojiContainer.textContent = item.emoji;
+                 scheduleItem.appendChild(emojiContainer);
+
+                 const detailsDiv = document.createElement('div');
+                 detailsDiv.classList.add('schedule-details');
+
+                 const titleDiv = document.createElement('div');
+                 titleDiv.classList.add('event-title');
+                 const titleSpan = document.createElement('span');
+                 titleSpan.textContent = item.title;
+                 const statusBadge = document.createElement('span');
+                 statusBadge.classList.add('status-badge');
+
+                 titleDiv.appendChild(titleSpan);
+                 titleDiv.appendChild(statusBadge);
+                 detailsDiv.appendChild(titleDiv);
+
+                 const timeDiv = document.createElement('div');
+                 timeDiv.classList.add('event-time');
+                 timeDiv.innerHTML = `<i class="far fa-calendar-alt"></i> ${item.dateString || new Date(item.timestamp).toLocaleString('si-LK')}`;
+                 detailsDiv.appendChild(timeDiv);
+
+                 if (item.tags && item.tags.length > 0) {
+                    const tagsSection = document.createElement('div');
+                    tagsSection.classList.add('details-section');
+                    const tagContainer = document.createElement('div');
+                    tagContainer.classList.add('tag-container');
+                    item.tags.forEach(tag => {
+                        const tagElement = document.createElement('span');
+                        tagElement.classList.add('tag');
+                        tagElement.innerHTML = `<i class="${tag.icon || 'fas fa-tag'}"></i> ${tag.text}`;
+                        tagContainer.appendChild(tagElement);
+                    });
+                    tagsSection.appendChild(tagContainer);
+                    detailsDiv.appendChild(tagsSection);
+                 }
+
+                 const countdownContainer = document.createElement('div');
+                 countdownContainer.classList.add('countdown-container');
+                 countdownContainer.innerHTML = `
+                    <div class="countdown">
+                        <div class="countdown-section days"><div class="countdown-value">00</div><div class="countdown-label">දින</div></div>
+                        <div class="countdown-section hours"><div class="countdown-value">00</div><div class="countdown-label">පැය</div></div>
+                        <div class="countdown-section minutes"><div class="countdown-value">00</div><div class="countdown-label">මිනි</div></div>
+                        <div class="countdown-section seconds"><div class="countdown-value">00</div><div class="countdown-label">තත්</div></div>
+                    </div>
+                 `;
+                 countdownContainer.style.display = 'none';
+                 detailsDiv.appendChild(countdownContainer);
+
+                 const progressContainer = document.createElement('div');
+                 progressContainer.classList.add('progress-container');
+                 progressContainer.innerHTML = `<div class="progress-bar"></div>`;
+                 progressContainer.style.display = 'none';
+                 detailsDiv.appendChild(progressContainer);
+
+                 const actionsDiv = document.createElement('div');
+                 actionsDiv.classList.add('actions');
+                 // Only add actions if item is not completed (can be done here or in updateStatus)
+                 actionsDiv.innerHTML = `
+                    <button class="action-btn add-reminder-btn">
+                        <i class="far fa-bell"></i> මතක් කිරීමක් එක් කරන්න
+                    </button>
+                    <button class="action-btn share-btn">
+                         <i class="fas fa-share-alt"></i> බෙදාගන්න
+                     </button>
+                 `;
+                 detailsDiv.appendChild(actionsDiv);
+
+                 scheduleItem.appendChild(detailsDiv);
+                 itemWrapper.appendChild(scheduleItem);
+
+                 return itemWrapper;
+             }
+
+            function renderSchedule() {
+                if (!scheduleData || scheduleData.length === 0) {
+                     loadingIndicatorTimeline.innerHTML = '<p style="color: var(--danger-color);">නැකැත් තොරතුරු නොමැත.</p>';
+                     loadingIndicatorTimeline.style.display = 'block';
+                     return;
+                }
+
+                timelineViewContainer.innerHTML = '<div class="timeline-line"></div>';
+                scheduleData.forEach((item, index) => {
+                    const itemElement = renderScheduleItem(item, index);
+                    timelineViewContainer.appendChild(itemElement);
+                });
+                loadingIndicatorTimeline.style.display = 'none';
+                updateCountdownsAndStatus();
+            }
+
+             function renderScheduleListItem(item, index) {
+                const listItem = document.createElement('div');
+                listItem.classList.add('list-item');
+                listItem.dataset.id = item.id;
+
+                 const cardBg = document.createElement('div');
+                 cardBg.classList.add('card-bg');
+                 listItem.appendChild(cardBg);
+
+                const emojiContainer = document.createElement('div');
+                emojiContainer.classList.add('emoji-container');
+                emojiContainer.style.backgroundColor = item.emojiBackground || 'var(--hover-color)';
+                emojiContainer.textContent = item.emoji;
+                listItem.appendChild(emojiContainer);
+
+                const detailsDiv = document.createElement('div');
+                detailsDiv.classList.add('schedule-details');
+
+                const titleDiv = document.createElement('div');
+                titleDiv.classList.add('event-title');
+                const titleSpan = document.createElement('span');
+                titleSpan.textContent = item.title;
+                const statusBadge = document.createElement('span');
+                statusBadge.classList.add('status-badge');
+
+                titleDiv.appendChild(titleSpan);
+                titleDiv.appendChild(statusBadge);
+                detailsDiv.appendChild(titleDiv);
+
+                const timeDiv = document.createElement('div');
+                timeDiv.classList.add('event-time');
+                timeDiv.innerHTML = `<i class="far fa-clock"></i> ${item.dateString || new Date(item.timestamp).toLocaleTimeString('si-LK', {hour: 'numeric', minute:'2-digit', hour12: true})}`;
+                detailsDiv.appendChild(timeDiv);
+
+                if (item.tags && item.tags.length > 0) {
+                    const tagContainer = document.createElement('div');
+                    tagContainer.classList.add('tag-container');
+                    item.tags.forEach(tag => {
+                        const tagElement = document.createElement('span');
+                        tagElement.classList.add('tag');
+                        tagElement.innerHTML = `<i class="${tag.icon || 'fas fa-tag'}" title="${tag.text}"></i>`;
+                        tagContainer.appendChild(tagElement);
+                    });
+                    detailsDiv.appendChild(tagContainer);
+                 }
+
+                listItem.appendChild(detailsDiv);
+                return listItem;
+            }
+
+            function renderList() {
+                if (!scheduleData || scheduleData.length === 0) {
+                     loadingIndicatorList.innerHTML = '<p style="color: var(--danger-color);">නැකැත් තොරතුරු නොමැත.</p>';
+                     loadingIndicatorList.style.display = 'block';
+                     return;
+                }
+
+                listViewContainer.innerHTML = ''; // Clear previous items
+                scheduleData.forEach((item, index) => {
+                    const itemElement = renderScheduleListItem(item, index);
+                    listViewContainer.appendChild(itemElement);
+                });
+                loadingIndicatorList.style.display = 'none'; // Hide loading
+                updateCountdownsAndStatus(); // Update status for list items too
+            }
+
+             // --- Calendar Functions ---
+            function getMonthNameSinhala(monthIndex) {
+                const monthNames = ['ජනවාරි', 'පෙබරවාරි', 'මාර්තු', 'අප්‍රේල්', 'මැයි', 'ජූනි', 'ජූලි', 'අගෝස්තු', 'සැප්තැම්බර්', 'ඔක්තෝම්බර්', 'නොවැම්බර්', 'දෙසැම්බර්'];
+                return monthNames[monthIndex];
+            }
+
+            function renderCalendar() {
+                calendarGrid.innerHTML = '';
+                const year = currentCalendarDate.getFullYear();
+                const month = currentCalendarDate.getMonth();
+
+                monthTitleElement.textContent = `${getMonthNameSinhala(month)} ${year}`;
+
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+                const today = new Date();
+                const todayDateString = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+
+                const startOffset = firstDayOfMonth;
+
+                 const eventDates = scheduleData
+                    .map(item => new Date(item.timestamp))
+                    .filter(date => date.getFullYear() === year && date.getMonth() === month)
+                    .map(date => date.getDate());
+
+                for (let i = startOffset - 1; i >= 0; i--) {
+                    const day = daysInPrevMonth - i;
+                    const dayElement = document.createElement('div');
+                    dayElement.classList.add('calendar-day', 'other-month');
+                    dayElement.textContent = day;
+                    calendarGrid.appendChild(dayElement);
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.classList.add('calendar-day');
+                    dayElement.textContent = day;
+                    dayElement.dataset.date = `${year}-${month}-${day}`;
+
+                    const currentDate = new Date(year, month, day);
+                    const currentDateString = `${year}-${month}-${day}`;
+
+                    if (currentDateString === todayDateString) {
+                        dayElement.classList.add('today');
+                    }
+                    if (selectedCalendarDate && currentDateString === selectedCalendarDate) {
+                        dayElement.classList.add('selected');
+                    }
+                    if (eventDates.includes(day)) {
+                        dayElement.classList.add('has-event');
+                         dayElement.title = "මෙම දිනයේ නැකතක් ඇත";
+                    }
+
+                    dayElement.addEventListener('click', () => {
+                         const prevSelected = calendarGrid.querySelector('.selected');
+                         if (prevSelected) {
+                             prevSelected.classList.remove('selected');
+                         }
+                         dayElement.classList.add('selected');
+                         selectedCalendarDate = dayElement.dataset.date;
+                         const clickedDate = new Date(year, month, day);
+                         scrollToEventOnDate(clickedDate);
+                    });
+
+                    calendarGrid.appendChild(dayElement);
+                }
+
+                const totalDaysRendered = startOffset + daysInMonth;
+                const remainingCells = (totalDaysRendered % 7 === 0) ? 0 : 7 - (totalDaysRendered % 7) ;
+
+                for (let i = 1; i <= remainingCells; i++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.classList.add('calendar-day', 'other-month');
+                    dayElement.textContent = i;
+                    calendarGrid.appendChild(dayElement);
+                }
+            }
+
+             function scrollToEventOnDate(date) {
+                 const targetTimestampStart = new Date(date).setHours(0, 0, 0, 0);
+                 const targetTimestampEnd = new Date(date).setHours(23, 59, 59, 999);
+
+                 let targetElement = null;
+                 let targetItemId = null;
+
+                 // Find the first event ID for that date
+                 for (let i = 0; i < scheduleData.length; i++) {
+                     if (scheduleData[i].timestamp >= targetTimestampStart && scheduleData[i].timestamp <= targetTimestampEnd) {
+                         targetItemId = scheduleData[i].id;
+                         break;
+                     }
+                 }
+
+                 if (targetItemId !== null) {
+                    // Ensure the timeline view is active to scroll within it
+                     if (currentView !== 'timeline') {
+                         // Switch to timeline view
+                         viewSelectorOptions.forEach(opt => opt.classList.remove('active'));
+                         document.querySelector('.view-option[data-view="timeline"]').classList.add('active');
+                         currentView = 'timeline';
+                         timelineViewContainer.style.display = 'flex';
+                         listViewContainer.style.display = 'none';
+                         // Ensure timeline is rendered if it wasn't
+                         if (timelineViewContainer.children.length <= 1) {
+                             renderSchedule();
+                         }
+                         // Small delay to allow rendering before scrolling
+                         setTimeout(() => {
+                            targetElement = timelineViewContainer.querySelector(`.schedule-item[data-id="${targetItemId}"]`);
+                             if (targetElement) {
+                                highlightAndScroll(targetElement);
+                             }
+                         }, 100);
+                     } else {
+                        targetElement = timelineViewContainer.querySelector(`.schedule-item[data-id="${targetItemId}"]`);
+                        if (targetElement) {
+                           highlightAndScroll(targetElement);
+                        }
+                     }
+                 } else {
+                     showToast(`තෝරාගත් ${date.toLocaleDateString('si-LK')} දිනට නැකතක් හමු නොවීය.`, 'info');
+                 }
+                 // Close popup after action
+                 calendarPopup.classList.remove('show');
+             }
+
+             function highlightAndScroll(element){
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    element.style.transition = 'background-color 0.5s ease';
+                    element.style.backgroundColor = 'var(--hover-color)';
+                    setTimeout(() => {
+                       element.style.backgroundColor = '';
+                    }, 1500);
+             }
+
+
+             // --- Theme Functions ---
+             function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                    themeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
+                    themeToggleButton.title = "ආලෝක මාදිලිය";
+                } else {
+                    document.body.classList.remove('dark-theme');
+                    themeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
+                    themeToggleButton.title = "අඳුරු මාදිලිය";
+                }
+             }
+
+             function toggleTheme() {
+                const currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+             }
+
+            // --- Toast Notification ---
+            function showToast(message, type = 'success') {
+                 clearTimeout(toastTimeout);
+
+                 toastMessage.textContent = message;
+                 toastIcon.className = 'toast-icon';
+                 toastIcon.classList.add(type);
+
+                 let iconClass = 'fa-check';
+                 if (type === 'error') iconClass = 'fa-times';
+                 if (type === 'info') iconClass = 'fa-info-circle';
+                 if (type === 'warning') iconClass = 'fa-exclamation-triangle';
+                 toastIcon.innerHTML = `<i class="fas ${iconClass}"></i>`;
+
+                 toastElement.classList.add('show');
+
+                 toastTimeout = setTimeout(() => {
+                     toastElement.classList.remove('show');
+                 }, 3500);
+             }
+
+            // --- Action Handlers ---
+            function handleScheduleItemActions(event) {
+               const targetButton = event.target.closest('.action-btn');
+               if (!targetButton) return;
+
+               const scheduleItem = targetButton.closest('.schedule-item');
+               if (!scheduleItem) return;
+
+               const itemId = scheduleItem.dataset.id;
+               const itemData = scheduleData.find(item => item.id == itemId);
+               if (!itemData) return;
+
+               if (targetButton.classList.contains('add-reminder-btn')) {
+                   // Reminder Logic
+                   console.log('Add reminder clicked for:', itemData.title);
+                   const reminderTime = new Date(itemData.timestamp - 15 * 60 * 1000); // 15 mins before
+                   const now = new Date();
+
+                   if (reminderTime <= now) {
+                       showToast(`"${itemData.title}" සඳහා මතක් කිරීමක් සැකසිය නොහැක (කාලය දැනටමත් ගෙවී ඇත හෝ ඉතා ආසන්නයි).`, 'warning');
+                       return;
+                   }
+
+                    if ('Notification' in window) {
+                        if (Notification.permission === 'granted') {
+                             // NOTE: Direct scheduling isn't possible with basic Notification API.
+                             // This toast simulates setting a reminder.
+                             // A real app would need background workers or server-side notifications.
+                             showToast(`"${itemData.title}" සඳහා මතක් කිරීමක් සකසන ලදී (නියමිත වේලාවට විනාඩි 15 කට පෙර).`, 'info');
+                        } else if (Notification.permission !== 'denied') {
+                            Notification.requestPermission().then(permission => {
+                                 if (permission === "granted") {
+                                     showToast('දැනුම්දීම් සඳහා අවසර ලබා දෙන ලදී. නැවත මතක් කිරීම එක් කරන්න.', 'success');
+                                 } else {
+                                     showToast('දැනුම්දීම් අවසරය ප්‍රතික්ෂේප විය. මතක් කිරීම් සැකසිය නොහැක.', 'warning');
+                                 }
+                            });
+                         } else { // Permission denied
+                             showToast('දැනුම්දීම් අවහිර කර ඇත. බ්‍රවුසර සැකසුම් පරීක්ෂා කරන්න.', 'error');
+                         }
+                    } else {
+                         showToast('මෙම බ්‍රවුසරය දැනුම්දීම් සඳහා සහය නොදක්වයි.', 'error');
+                    }
+
+               } else if (targetButton.classList.contains('share-btn')) {
+                   // Share Logic
+                    console.log('Share clicked for:', itemData.title);
+                    const shareData = {
+                        title: `නැකත: ${itemData.title}`,
+                        text: `නැකත: ${itemData.title}\nවේලාව: ${itemData.dateString}\n\n(මෙම තොරතුරු බෙදාගන්නා ලදී)`, // Simplified text
+                        url: window.location.href // Optional: Share the app link
+                    };
+                    try {
+                        if (navigator.share && navigator.canShare(shareData)) {
+                             navigator.share(shareData)
+                                .then(() => console.log('Successful share'))
+                                .catch((error) => {
+                                     console.log('Error sharing', error);
+                                     // Avoid showing error toast if user cancels share dialog
+                                     if (error.name !== 'AbortError') {
+                                        showToast('බෙදාගැනීමේ දෝෂයක් ඇතිවිය.', 'error');
+                                     }
+                                });
+                        } else {
+                            // Fallback: Copy to clipboard
+                             const shareText = `${shareData.title}\nවේලාව: ${itemData.dateString}\n${shareData.url ? `\n${shareData.url}` : ''}`;
+                             navigator.clipboard.writeText(shareText).then(() => {
+                                 showToast('නැකත් විස්තර පසුරු පුවරුවට පිටපත් කරන ලදී.', 'success');
+                             }).catch(err => {
+                                 console.error('Clipboard write failed:', err);
+                                 showToast('පසුරු පුවරුවට පිටපත් කිරීමට නොහැකි විය.', 'error');
+                             });
+                        }
+                    } catch (error) {
+                        console.error("Sharing failed:", error);
+                        showToast('බෙදාගැනීම අසාර්ථක විය.', 'error');
+                    }
+               }
+            }
+
+
+            // --- Event Listeners ---
+            themeToggleButton.addEventListener('click', toggleTheme);
+
+            fabButton.addEventListener('click', () => {
+                floatingPanel.classList.toggle('show');
+                fabButton.classList.toggle('active');
+                fabButton.innerHTML = fabButton.classList.contains('active') ? '<i class="fas fa-times"></i>' : '<i class="fas fa-plus"></i>';
+                fabButton.title = fabButton.classList.contains('active') ? 'වසන්න' : 'ක්‍රියා';
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!fabButton.contains(event.target) && !floatingPanel.contains(event.target) && floatingPanel.classList.contains('show')) {
+                    floatingPanel.classList.remove('show');
+                     fabButton.classList.remove('active');
+                     fabButton.innerHTML = '<i class="fas fa-plus"></i>';
+                     fabButton.title = 'ක්‍රියා';
+                }
+            });
+
+            calendarButton.addEventListener('click', () => {
+                currentCalendarDate = new Date(2025, 3, 1); // Reset to April 2025
+                renderCalendar();
+                calendarPopup.classList.add('show');
+            });
+
+            closeCalendarButton.addEventListener('click', () => calendarPopup.classList.remove('show'));
+            calendarPopup.addEventListener('click', (event) => { if (event.target === calendarPopup) calendarPopup.classList.remove('show'); });
+
+            prevMonthButton.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1); renderCalendar(); });
+            nextMonthButton.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1); renderCalendar(); });
+
+            showTodayButton.addEventListener('click', () => {
+                const today = new Date();
+                currentCalendarDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                selectedCalendarDate = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+                renderCalendar();
+                // Give calendar time to render before scrolling on main page
+                setTimeout(() => scrollToEventOnDate(today), 50);
+            });
+
+            refreshButton.addEventListener('click', () => {
+                 showToast('තොරතුරු අලුත් කරමින්...', 'info');
+                 loadingIndicatorTimeline.style.display = currentView === 'timeline' ? 'block' : 'none';
+                 loadingIndicatorList.style.display = currentView === 'list' ? 'block' : 'none';
+                 if(currentView === 'timeline') timelineViewContainer.innerHTML = '<div class="timeline-line"></div>';
+                 else listViewContainer.innerHTML = '';
+
+                 setTimeout(() => {
+                     // In a real app, you'd fetch new data here
+                     // For now, just re-render
+                     if (currentView === 'timeline') renderSchedule();
+                     else renderList();
+                     updateCountdownsAndStatus();
+                     showToast('නැකැත් තොරතුරු යාවත්කාලීන කරන ලදී.', 'success');
+                     floatingPanel.classList.remove('show');
+                     fabButton.classList.remove('active');
+                     fabButton.innerHTML = '<i class="fas fa-plus"></i>';
+                     fabButton.title = 'ක්‍රියා';
+                 }, 800);
+            });
+
+             printButton.addEventListener('click', () => {
+                 showToast('මුද්‍රණ දසුන සූදානම් කරමින්...', 'info');
+                 // Could hide unnecessary elements before printing
+                 window.print();
+             });
+
+             settingsButton.addEventListener('click', () => {
+                 showToast('සැකසුම් තවමත් ක්‍රියාත්මක නැත.', 'warning');
+             });
+
+             notificationButton.addEventListener('click', () => {
+                 // Could show a panel with past/upcoming notifications/reminders
+                 showToast('දැනුම්දීම් තවමත් ක්‍රියාත්මක නැත.', 'warning');
+             });
+
+
+             viewSelectorOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    viewSelectorOptions.forEach(opt => opt.classList.remove('active'));
+                    option.classList.add('active');
+                    const newView = option.dataset.view;
+
+                    if (newView !== currentView) {
+                        currentView = newView;
+                        if (currentView === 'timeline') {
+                            timelineViewContainer.style.display = 'flex';
+                            listViewContainer.style.display = 'none';
+                            if (timelineViewContainer.children.length <= 1) {
+                                 loadingIndicatorTimeline.style.display = 'block';
+                                 renderSchedule();
+                            }
+                        } else if (currentView === 'list') {
+                            timelineViewContainer.style.display = 'none';
+                            listViewContainer.style.display = 'flex';
+                             if (listViewContainer.children.length <= 1) {
+                                 loadingIndicatorList.style.display = 'block';
+                                 renderList();
+                             }
+                        }
+                        updateCountdownsAndStatus(); // Ensure status is updated for the new view
+                    }
+                });
+            });
+
+            // Add event listener for actions using delegation
+            timelineViewContainer.addEventListener('click', handleScheduleItemActions);
+            // listViewContainer.addEventListener('click', handleScheduleItemActions); // If actions needed in list view
+
+
+            // --- Initialization ---
+            function initialize() {
+                 const savedTheme = localStorage.getItem('theme') || 'light';
+                 applyTheme(savedTheme);
+
+                 const activeViewOption = document.querySelector('.view-option.active');
+                 currentView = activeViewOption ? activeViewOption.dataset.view : 'timeline';
+
+                 if (currentView === 'timeline') {
+                      timelineViewContainer.style.display = 'flex';
+                      listViewContainer.style.display = 'none';
+                      loadingIndicatorList.style.display = 'none';
+                      renderSchedule();
+                  } else {
+                      timelineViewContainer.style.display = 'none';
+                      listViewContainer.style.display = 'flex';
+                      loadingIndicatorTimeline.style.display = 'none';
+                      renderList();
+                  }
+
+                 updateClock();
+                 clockInterval = setInterval(updateClock, 1000);
+
+                 updateCountdownsAndStatus();
+                 countdownInterval = setInterval(updateCountdownsAndStatus, 1000);
+            }
+
+            initialize();
+
+        });
+    </script>
+        <footer class="footer">
+            <p>Developed by <a href="https://github.com/WAH2003Nirmal" target="_blank" rel="noopener noreferrer">WAH Nirmal</a></p>
+        </footer>
+</body>
+</html>
